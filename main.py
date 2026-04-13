@@ -1,20 +1,24 @@
 """Run this file to run the model and save the results"""
-import plotly.express as px
-import plotly.io as pio
 
+from heat_model import create_daily_temperature_setpoint, calculate_heat_demand_simple
+from plots import create_temp_fig, create_q_fig
 from read_data import create_dataframe_from_input
 
 
 if __name__ == "__main__":
-    pio.renderers.default = "png"
-
     DATA_FILE = "data/1997.txt"
-    data = create_dataframe_from_input(data_file=DATA_FILE)
+    U = 1  # W/m²K; average heat transfer coefficient
+    A = 400  # m²; surface area
 
-    fig = px.line(
-        data,
-        x="date",
-        y="temp",
-        labels={"date": "Date", "temp": "Temperature (°C)"},
-        title=f"Temperature recorded between {min(data['date']).strftime('%d %b %Y')} and {max(data['date']).strftime('%d %b %Y')} in De Bilt")
-    fig.write_image("figures/temperature.png")
+    THERMOSTAT = {
+    # H: T (°C)
+        7: 19,
+        21: 16
+    }
+
+    data = create_dataframe_from_input(data_file=DATA_FILE)
+    data["t_set"] = create_daily_temperature_setpoint(THERMOSTAT, repeat=365).values
+    data["Q"] = calculate_heat_demand_simple(u=U,a=A, t_set=data["t_set"], t_outside=data["temp"]).values
+
+    create_temp_fig(data).write_image("figures/temperature.png")
+    create_q_fig(data, THERMOSTAT).write_image("figures/heat_demand.png")
