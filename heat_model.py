@@ -17,7 +17,7 @@ def create_daily_temperature_setpoint(settimes: dict[int, int|float], repeat: in
     :return: pandas Series of temperature setpoints.
     """
     # create empty series
-    t_set = pd.Series(data=24*[0], name="Tset", dtype=np.float64)
+    t_set = pd.Series(data=24*[0], name="t_set", dtype=np.float64)
 
     # created sorted list of times and matching temperature list
     times = sorted([int(t) for t in settimes.keys()])
