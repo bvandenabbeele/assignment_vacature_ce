@@ -1,2 +1,5 @@
 pandas
-plotly
+plotly[express]
+kaleido
+ipython
+nbformat>=4.2.0
