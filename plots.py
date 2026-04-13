@@ -1,6 +1,5 @@
 """Functions to create figures"""
 import pandas as pd
-import plotly as pl
 import plotly.express as px
 
 
