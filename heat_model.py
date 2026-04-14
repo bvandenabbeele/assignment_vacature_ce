@@ -1,10 +1,3 @@
-"""$Q = U  A  (T_{setpoint} - T_{outside}) / 1000$
-
-    - $U$: De gemiddelde warmteoverdrachtcoëfficiënt $(W/ m^2K )$. Schat een realistisch getal in op basis van literatuur.
-    - $A$: Totale schiloppervlak ($m^2$) van de woning (ramen, muren, dak etc). Neem voor het gemak een oppervlak van 400 $m^2$.
-    - $T_{setpoint}$: Streeftemperatuur in de woning (bijv. 20°C). **Bonus: variëer de set-point temperatuur voor dag en nacht.**
-    - $T_{outside}$: Buitentemperatuur per uur (°C)
-"""
 import numpy as np
 import pandas as pd
 
@@ -36,19 +29,34 @@ def create_daily_temperature_setpoint(settimes: dict[int, int|float], repeat: in
 
 
 def calculate_heat_demand_simple(u: float, a: float, t_set: float | pd.Series, t_outside: float | pd.Series) -> pd.Series:
-    """_summary_
+    """Calculate the head demand of a home.
 
-    :param u: _description_
-    :param a: _description_
-    :param t_set: _description_
-    :param t_outside: _description_
-    :return:
+    The following equation is used to calculate heat demand
+    $Q = U  A  (T_{setpoint} - T_{outside}) / 1000$
+
+        - $U$: De gemiddelde warmteoverdrachtcoëfficiënt $(W/ m^2K )$. Schat een realistisch getal in op basis van literatuur.
+        - $A$: Totale schiloppervlak ($m^2$) van de woning (ramen, muren, dak etc). Neem voor het gemak een oppervlak van 400 $m^2$.
+        - $T_{setpoint}$: Streeftemperatuur in de woning (bijv. 20°C). **Bonus: variëer de set-point temperatuur voor dag en nacht.**
+        - $T_{outside}$: Buitentemperatuur per uur (°C)
+
+    The negative heat demand from the equation above is regarded as stored heat and used as a buffer to offset subsequent positive head demand. \
+        This ensures that there is no heat demand e.g. during the after a hot Summer day until the house has fully cooled down.
+
+    :param u: heat transfer coefficient.
+    :param a: surface area.
+    :param t_set: temperature setpoint inside.
+    :param t_outside: outside temperature.
+    :return: pandas series of the heat demand for the heat pump
     """
 
     q_raw = u * a * (t_set - t_outside) / 1000
+    # keep only positive heat demand
     q = q_raw.clip(lower=0)
+    # use negative heat demand to build a buffer of stored heat
     q_stored = (-q_raw.clip(upper=0)).cumsum()
 
+    # loop over the heat demand. whenever we have a positive heat demand and some heat in our buffer, \
+    # we use that heat to lower the heat demand for the heat pump. The used heat is taken out of the buffer.
     for i in range(len(q)):
         if q[i] > 0 and q_stored[i] > 0:
             q_used = min(q[i], q_stored[i])
@@ -59,23 +67,15 @@ def calculate_heat_demand_simple(u: float, a: float, t_set: float | pd.Series, t
 
 
 def calculate_heat_pump_power(efficiency: float, t_condensation: int | float, t_outside: pd.Series, heat_demand: pd.Series) -> pd.Series:
-    """_summary_
+    """Calculate heat pump power draw.
 
-    :param efficiency: _description_
-    :param t_condensation: _description_
-    :param t_outside: _description_
-    :param heat_demand: _description_
-    :return: _description_
+    For COP we use COP = efficiency * t_cond / (t_cond - t_outside)
+
+    :param efficiency: heat pump efficiency
+    :param t_condensation: heat pump condensation temperature
+    :param t_outside: outside temperature
+    :param heat_demand: heat generation demanded of the heat pump
+    :return: pandas series of the power draw of the heat pump
     """
     cop = efficiency * t_condensation / (t_condensation - t_outside)
     return heat_demand / cop
-
-
-if __name__ == "__main__":
-    from read_data import create_dataframe_from_input
-    calculate_heat_demand_simple(
-        1,
-        400,
-        19.,
-        create_dataframe_from_input("data/1997.txt")["temp"]
-    )
