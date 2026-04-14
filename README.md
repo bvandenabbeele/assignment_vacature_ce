@@ -13,7 +13,7 @@ Het is voor ons niet de bedoeling dat je vele uren aan deze casus besteedt, maar
 Schrijf een Pythonmodel dat:
 
 1. De warmtevraag van een huishouden berekent op uurbasis (in kWh/uur).
-2. Het totale elektriciteitsverbruik van een all-electric warmtepomp berekent om aan deze warmtevraag te voldoen. Je mag ervan uitgaan dat de warmtepomp voldoende vermogen heeft om de hoogste warmtepiekvraag op te vangen. Een extra e-boiler of gasboiler is dus niet nodig. 
+2. Het totale elektriciteitsverbruik van een all-electric warmtepomp berekent om aan deze warmtevraag te voldoen. Je mag ervan uitgaan dat de warmtepomp voldoende vermogen heeft om de hoogste warmtepiekvraag op te vangen. Een extra e-boiler of gasboiler is dus niet nodig.
 3. Een grafiek genereert met de warmtevraag (kWh/uur) en het totale verbruik van de warmtepomp (in kWh).
 
 ### Inputs
@@ -28,15 +28,15 @@ Schrijf een Pythonmodel dat:
 
 Gebruik het volgende eenvoudige thermodynamische model:
 
-- **Warmtevraag (Q, in kWh/uur)**:  
+- **Warmtevraag (Q, in kWh/uur)**:
 $Q = U  A  (T_{setpoint} - T_{outside}) / 1000$
   - $U$: De gemiddelde warmteoverdrachtcoëfficiënt $(W/ m^2K )$. Schat een realistisch getal in op basis van literatuur.
   - $A$: Totale schiloppervlak ($m^2$) van de woning (ramen, muren, dak etc). Neem voor het gemak een oppervlak van 400 $m^2$.
   - $T_{setpoint}$: Streeftemperatuur in de woning (bijv. 20°C). **Bonus: variëer de set-point temperatuur voor dag en nacht.**
   - $T_{outside}$: Buitentemperatuur per uur (°C)
 
-  Je mag het initiëel opwarmen van de woning verwaarlozen.s
-- **Warmtepompverbruik (E, in kWh)**:  
+  Je mag het initiëel opwarmen van de woning verwaarlozen.
+- **Warmtepompverbruik (E, in kWh)**:
 $E = Q / COP$
   - $COP$: Coëfficiënt of Performance van de warmtepomp. Maak deze afhankelijk van de buitentemperatuur. Zoek zelf naar literatuur voor een correcte COP-formule.
 
