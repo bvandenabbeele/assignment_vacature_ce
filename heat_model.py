@@ -45,11 +45,37 @@ def calculate_heat_demand_simple(u: float, a: float, t_set: float | pd.Series, t
     :return:
     """
 
-    return u * a * (t_set - t_outside) / 1000
+    q_raw = u * a * (t_set - t_outside) / 1000
+    q = q_raw.clip(lower=0)
+    q_stored = (-q_raw.clip(upper=0)).cumsum()
+
+    for i in range(len(q)):
+        if q[i] > 0 and q_stored[i] > 0:
+            q_used = min(q[i], q_stored[i])
+            q[i] -= q_used
+            q_stored[i::] -= q_used
+
+    return q
+
+
+def calculate_heat_pump_power(efficiency: float, t_condensation: int | float, t_outside: pd.Series, heat_demand: pd.Series) -> pd.Series:
+    """_summary_
+
+    :param efficiency: _description_
+    :param t_condensation: _description_
+    :param t_outside: _description_
+    :param heat_demand: _description_
+    :return: _description_
+    """
+    cop = efficiency * t_condensation / (t_condensation - t_outside)
+    return heat_demand / cop
 
 
 if __name__ == "__main__":
-    tt = create_daily_temperature_setpoint({7: 19, 10: 21, 21: 15}, repeat=365)
-    print(type(tt))
-    print(len(tt))
-    print(list(tt[:72]))
+    from read_data import create_dataframe_from_input
+    calculate_heat_demand_simple(
+        1,
+        400,
+        19.,
+        create_dataframe_from_input("data/1997.txt")["temp"]
+    )
